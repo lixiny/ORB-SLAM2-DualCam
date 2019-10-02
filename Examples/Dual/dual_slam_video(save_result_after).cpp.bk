@@ -1,0 +1,276 @@
+//STD C++ INCLUDES
+#include <iostream>
+#include <stdio.h>
+#include <cmath>
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include <string.h>
+#include <sstream>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <chrono>
+#include <memory>
+#include <sys/types.h>
+#include <dirent.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+#include <sys/select.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
+#include <fstream>
+
+#include "System.h"
+#include "Tracking.h"
+
+using namespace std;
+using namespace cv;
+using namespace ORB_SLAM2;
+using namespace std::chrono;
+
+#define KEYCODE_ESC         0x1B
+#define KEYCODE_SPACE       0x20
+#define KEYCODE_s           0x73
+#define KEYCODE_l           0x6C
+
+vector<string> getFilesInDirectory ( const string& cate_dir, const string suffix);
+static void sleep_ms(unsigned int secs);
+string getTimeStampInString();
+int kbhit(void);
+
+int main(int argc, char** argv)
+{
+
+    string video = "/home/sirius/Documents/ORB-SLAM2-DualCam/labLoop1.avi";
+    string pathToVoc = "/home/sirius/Documents/ORB-SLAM2-DualCam/Vocabulary/ORBvoc.bin";
+    string pathToSetting = "/home/sirius/Documents/ORB-SLAM2-DualCam/Asus.yaml";
+    string systemTime = getTimeStampInString();
+    string videoOutputName = "video_" + systemTime  + ".avi";
+    string MapPointFileName = "MP_" + systemTime + ".txt";
+    cv::VideoWriter output;
+
+    bool saveVideo = false;
+    bool mappingEfficiencyTest = false;
+    bool keyboardControl = true;
+    int skip = 30;
+    cv::VideoCapture cap(video);
+    if(!cap.isOpened()){
+        cout << "Error opening video stream or file" << endl;
+        return -1;
+    }
+
+    int width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    int height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    cv::Size S = cv::Size(width,  height);
+    cout << "Image Size: width " << width << " height: " << height << endl;
+    if(saveVideo) {
+        output = cv::VideoWriter(videoOutputName, cv::VideoWriter::fourcc('M','J','P','G'),cap.get(cv::CAP_PROP_FPS), S );
+    }
+
+    shared_ptr<ORB_SLAM2::System> pSLAM = make_shared<ORB_SLAM2::System>(pathToVoc,pathToSetting,ORB_SLAM2::System::MONOCULAR,true);
+    pSLAM->init();
+
+    Rect rectLeft(0,0,640,480);
+    Rect rectRight(640,0,640,480);
+    cv::Mat frame;
+    cv::Mat lastFrame;
+    vector<cv::Mat> imgs;
+    imgs.resize(2);
+
+    double timestamp = 0.0;
+    int frameCount = 0;
+    bool quit = false;
+
+    while (true) {
+        cap >> frame;
+        if (frame.empty()){
+            if(lastFrame.empty()) break;
+            frame = lastFrame;
+        }
+        if(skip-->0) continue;
+
+        // Mat imageRGB[3];
+        // split(frame, imageRGB);
+        // for (int i = 0; i < 3; i++)
+        // {
+        //     equalizeHist(imageRGB[i], imageRGB[i]);
+        // }
+        // merge(imageRGB, 3, frame);
+
+        Mat rgbLeft = frame(rectLeft);
+        Mat rgbRight = frame(rectRight);
+
+        imgs[0] = rgbLeft;
+        imgs[1] = rgbRight;
+        timestamp += 1.0/30;
+        pSLAM->TrackMonocular(imgs, timestamp);
+
+        lastFrame = frame;
+
+        if(saveVideo) output << frame;
+        frameCount++;
+
+        if(keyboardControl) {
+            if( kbhit())   //key down
+            {
+                char c = getchar();
+                switch (c) {
+                case KEYCODE_ESC:{
+                    cap.release();
+                    if(saveVideo) {
+                        cout<<"Finishing save video ..."<<endl;
+                        output.release();
+                    }
+                    quit = true;
+                    break;
+                }
+                case KEYCODE_SPACE: {
+                    pSLAM->SaveModeChange();
+                    break;
+                }
+                case KEYCODE_s: {
+                    if( pSLAM->mbSaveTraj){
+                        pSLAM->SaveFramePoseTcw(pSLAM->mvSavedFramePose,
+                                                systemTime + "_No."+ to_string(frameCount)+"_FrameSaved.txt");
+                    }else{
+                        pSLAM->SaveFramePoseTcw(pSLAM->mvAllFramePose,
+                                                systemTime + "_No."+ to_string(frameCount)+"_FrameTotal.txt");
+                    }
+                    pSLAM->SaveKeyFramePoseTcw(systemTime + "_No."+ to_string(frameCount)+"_KeyFrames.txt");
+                    pSLAM->SaveMapPoint(systemTime + "_No."+ to_string(frameCount)+"_MapPoints.txt");
+                    break;
+
+                }
+                case KEYCODE_l:{
+                    pSLAM->SetCompulsoryLost();
+                    break;
+                }
+                default:break;
+                }
+
+            }
+        }
+
+        if(quit) break;
+
+        if(mappingEfficiencyTest) {
+            if(pSLAM->mpTracker->mbIsMapScaled && frameCount != 0 && frameCount % 500 == 0) {
+                pSLAM->SaveFramePoseTcw(pSLAM->mvAllFramePose, "Frame_"+to_string(frameCount)+".txt");
+                pSLAM->SaveKeyFramePoseTcw("KeyFrame_"+to_string(frameCount)+".txt");
+                pSLAM->SaveMapPoint("MapPoint_"+to_string(frameCount)+".txt");
+                pSLAM->SaveLocalMapPoint("LocalMapPoints_"+to_string(frameCount)+".txt");
+            }
+        }
+
+
+    }
+    cout << "Total count Frame: " << frameCount << endl;
+    pSLAM->Shutdown();
+    exit(0);
+}
+
+
+int kbhit(void)
+{
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    if(ch != EOF)
+    {
+        ungetc(ch, stdin);
+        return 1;
+    }
+    return 0;
+}
+
+string getTimeStampInString()
+{
+    milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+    auto secs = duration_cast<seconds>(ms);
+    ms -= duration_cast<milliseconds>(secs);
+    auto mins = duration_cast<minutes>(secs);
+    secs -= duration_cast<seconds>(mins);
+    auto hour = duration_cast<hours>(mins);
+    mins -= duration_cast<minutes>(hour);
+    std::stringstream ss;
+    ss << hour.count() << mins.count() << secs.count();
+    return ss.str();
+}
+
+static void sleep_ms(unsigned int secs)
+
+{
+
+    struct timeval tval;
+
+    tval.tv_sec=secs/1000;
+
+    tval.tv_usec=(secs*1000)%1000000;
+
+    select(0,NULL,NULL,NULL,&tval);
+
+}
+
+
+vector<string> getFilesInDirectory ( const string& cate_dir, const string suffix) {
+    bool hasSuffix = ! suffix.empty();
+
+    vector<string> files;
+    vector<string> validfiles;
+    DIR *dir;
+    struct dirent *ptr;
+
+    if ((dir=opendir(cate_dir.c_str())) == NULL)
+    {
+        perror("Open dir error...");
+        exit(1);
+    }
+
+    while ((ptr=readdir(dir)) != NULL)
+    {
+        if(strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0)    ///current dir OR parrent dir
+            continue;
+        else if(ptr->d_type == 8)    ///file
+            //printf("d_name:%s/%s\n",basePath,ptr->d_name);
+            files.push_back(ptr->d_name);
+        else if(ptr->d_type == 10)    ///link file
+            //printf("d_name:%s/%s\n",basePath,ptr->d_name);
+            continue;
+        else if(ptr->d_type == 4)    ///dir
+        {
+            files.push_back(ptr->d_name);
+        }
+    }
+    closedir(dir);
+
+    std::sort(files.begin(), files.end());
+    for (size_t i = 0; i< files.size(); i++) {
+        if( ! hasSuffix) {
+            validfiles.push_back(cate_dir + "/" + files[i]);
+        } else {
+            string::size_type idx;
+            idx=files[i].find(suffix);
+            if(idx == string::npos) continue; // 当前文件名中不包含此后缀
+            validfiles.push_back(cate_dir + "/" + files[i]);
+
+
+        }
+
+    }
+    return validfiles;
+}
