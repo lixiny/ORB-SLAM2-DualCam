@@ -9,7 +9,7 @@ ORB-SLAM2-DualCam is a real-time SLAM library implemented for the **Dual Camera 
     <img src="doc/dual_camera_model.jpg", width="500">
 </div>
 
-We provide Demo on [[Youtube](https://www.youtube.com/watch?v=MhrrnwHUnL0)] and [[bilibili](https://www.youtube.com/watch?v=MhrrnwHUnL0)].   
+We provide Demo on [[YouTube](https://www.youtube.com/watch?v=MhrrnwHUnL0)] and [[bilibili](https://www.bilibili.com/video/av69906130)].   
 And example of our self-collected video sequence at [[Google Drive](https://drive.google.com/file/d/1cZVqX36viThrwVyiRhUjFG1vOZTjpWCq/view?usp=sharing)] and [[百度云](https://pan.baidu.com/s/1sL8lWkmoSWgwRjCShQ1DfQ)](`i871`).   
 
 # 2. Prerequisites
@@ -27,7 +27,7 @@ We use [OpenCV](http://opencv.org) to manipulate images and features. Dowload an
 Required by g2o (see below). Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**.
 
 ## DBoW2 and g2o (Included in Thirdparty folder)
-We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the Thirdparty folder.  **NOTICE** : The g2o library is different from the one in ORB-SLAM2 due to we add edges that support dual camera pose.   
+We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the *Thirdparty* folder.  **NOTICE** : The g2o library is different from the one in ORB-SLAM2 due to we add edges that support dual camera pose.   
 
 # 3. Building ORB-SLAM2-DualCam library and examples  
 
@@ -49,4 +49,7 @@ This will create **libORB_SLAM2_DualCam.so**  at `lib` folder and the executable
 3. and execute the followling command 
 ```
 ./build/Dual/dual_slam_video  Vocabulary/ORBvoc.bin  Dual-LenaCV.yaml  indoor_lab_loop.avi
-```
+```   
+
+# 5. Processing your own sequences
+// TODO
