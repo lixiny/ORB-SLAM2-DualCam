@@ -96,7 +96,7 @@ public:
 
 public:
     const int CAP = 0;
-    const int REC = 1;
+    const int REL = 1;
     double mReloccScale = 1.0;
     int mnSecondMap = 0;
     const int NUM_SECONDMAP = 8;
@@ -231,7 +231,7 @@ protected:
     cv::Mat mDistCoef;
     vector<cv::Mat> mvK;   // ncameras
     vector<cv::Mat> mvDistCoef;  // ncameras
-    vector<cv::Mat> mvTsol_sys;
+    vector<cv::Mat> mvTsib_cap;
 
     //New KeyFrame rules (according to fps)
     int mMinFrames;

@@ -90,7 +90,7 @@ Tracking::Tracking(
     mpSystem->mnCameras = mnCameras;
     mvK.resize(mnCameras);
     mvDistCoef.resize(mnCameras);
-    mvTsol_sys.resize(mnCameras);
+    mvTsib_cap.resize(mnCameras);
     mvpStandardORBextractor.resize(mnCameras);
     mvpIniORBextractor.resize(mnCameras);
     mpCameras = make_shared<Cameras>(mnCameras);
@@ -139,7 +139,7 @@ Tracking::Tracking(
 
         if(i == CAP) {
             auto Tidentity = Eigen::Isometry3d::Identity();
-            mvTsol_sys[CAP] = Converter::toCvMat(Tidentity.matrix());
+            mvTsib_cap[CAP] = Converter::toCvMat(Tidentity.matrix());
             continue;
         }
         float qwi = fSettings[string (cameraNamei + ".qw")];
@@ -161,11 +161,11 @@ Tracking::Tracking(
         Tsci.rotate(qsci);
         Tsci.pretranslate(tsci);
 
-        mvTsol_sys[i] = Converter::toCvMat(Tsci.matrix());
+        mvTsib_cap[i] = Converter::toCvMat(Tsci.matrix());
     }
 
     mpCameras->setIntrinsics(mvK, mvDistCoef);
-    mpCameras->setExtrinsics(mvTsol_sys);
+    mpCameras->setExtrinsics(mvTsib_cap);
     mpMapDrawer->SetCameras(mpCameras);
 
     mvK[CAP].copyTo(mK);
@@ -438,11 +438,11 @@ void Tracking::Track()
             avg /= mvRelocSoldierScale.size();
             mReloccScale = avg;
 
-            CreateSecondMapMultical(REC, mReloccScale);
+            CreateSecondMapMultical(REL, mReloccScale);
         } // 第二种情况
         else if(mbIsMapScaled && mnLastRelocFrameId == mpCurrentFrame->mnId)
         {
-            AdjustSecondMapMultical(REC, mReloccScale);
+            AdjustSecondMapMultical(REL, mReloccScale);
         }
 
     }
@@ -476,7 +476,7 @@ bool Tracking::FindPartialRelocalCandidate()
 
     if(mpMap->KeyFramesInMap() >= 10) {
         double scale = 1.0;
-        bool relocC = RelocalizationPartialOnCam(REC, scale);
+        bool relocC = RelocalizationPartialOnCam(REL, scale);
         if(! relocC) return false;
         if(mbIsMapScaled) {
             mnLastRelocFrameId = mpCurrentFrame->mnId;
