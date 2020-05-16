@@ -25,6 +25,7 @@
 #include<string>
 #include<thread>
 #include<mutex>
+#include <unistd.h>
 #include<opencv2/core/core.hpp>
 #include"ORBVocabulary.h"
 

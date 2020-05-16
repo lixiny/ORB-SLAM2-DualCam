@@ -279,7 +279,7 @@ int Optimizer::PoseOptimization(FramePtr pFrame)
 
 
     const float deltaMono = sqrt(5.991);
-    const float deltaStereo = sqrt(7.815);
+    // const float deltaStereo = sqrt(7.815);
 
 
     {
@@ -350,7 +350,7 @@ int Optimizer::PoseOptimization(FramePtr pFrame)
     // 由于每次优化后是对所有的观测进行outlier和inlier判别，因此之前被判别为outlier有可能变成inlier，反之亦然
     // 基于卡方检验计算出的阈值（假设测量有一个像素的偏差）
     const float chi2Mono[4]={5.991,5.991,5.991,5.991};
-    const float chi2Stereo[4]={7.815,7.815,7.815, 7.815};
+    // const float chi2Stereo[4]={7.815,7.815,7.815, 7.815};
     const int its[4]={10,10,10,10};
 
     int nBad=0;

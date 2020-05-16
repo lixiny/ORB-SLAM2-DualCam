@@ -78,7 +78,7 @@ class PnPsolver {
   cv::Mat find(vector<bool> &vbInliers, int &nInliers);
 
   cv::Mat iterate(int nIterations, bool &bNoMore, vector<bool> &vbInliers, int &nInliers);
-  int forCam = -1; // -1 代表了对当前帧所有cam做冲定位
+  int forCam = -1; // -1 代表了对当前帧所有cam做重定位
  private:
 
   void CheckInliers();

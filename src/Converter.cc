@@ -48,7 +48,7 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
 std::vector<cv::Mat> Converter::toDescriptorVector(const std::vector<cv::Mat>& Descriptors)
 {
     std::vector<cv::Mat> vDesc;
-    for (int c = 0; c < Descriptors.size(); ++c)
+    for (unsigned c = 0; c < Descriptors.size(); ++c)
         for (int j = 0; j < Descriptors[c].rows; j++)
             vDesc.push_back(Descriptors[c].row(j));
 

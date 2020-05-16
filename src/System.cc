@@ -354,7 +354,6 @@ void System::SaveKeyFramePoseTcw(const string &filename)
 
     for(auto it = mapIdAndKeyFrame.begin(); it != mapIdAndKeyFrame.end(); it++)
     {
-        unsigned int KFid = it->first;
         KeyFramePtr pKF = it->second;
 
         if(!pKF || pKF->isBad())

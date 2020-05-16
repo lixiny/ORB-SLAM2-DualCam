@@ -157,6 +157,7 @@ void Viewer::Run()
 
         pangolin::FinishFrame();
 
+        if (mpTracker->mState == 0) continue;
         cv::Mat im = mpFrameDrawer->DrawFrame();
         int width = im.cols / 1.5f;
         int height = im.rows / 1.5f;
@@ -164,7 +165,7 @@ void Viewer::Run()
         cv::resize(im, im, S);
         cv::imshow("ORB-SLAM2: Current Frame",im);
         cv::waitKey(mT);
-
+        
         if(menuReset)
         {
             menuShowGraph = true;

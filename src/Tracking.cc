@@ -95,6 +95,12 @@ Tracking::Tracking(
     mvpIniORBextractor.resize(mnCameras);
     mpCameras = make_shared<Cameras>(mnCameras);
     mnRelocSoldiers = 0;
+    mReloccScale = 1.0;
+    mbIsMapScaled = false;
+    mnLastRelocFrameId = 0;
+    mnLastLostRelocFrameId = 0;
+    mnFirstScaleKFId = 0;
+    mnSecondMap = 0;
 
     // 相机内外参数赋值
     for(int i = 0; i < mnCameras; i++) {
@@ -208,7 +214,6 @@ Tracking::Tracking(
     cout << "- Scale Factor: " << fScaleFactor << endl;
     cout << "- Initial Fast Threshold: " << fIniThFAST << endl;
     cout << "- Minimum Fast Threshold: " << fMinThFAST << endl;
-
 
 }
 
@@ -369,26 +374,6 @@ void Tracking::Track()
                     mpCurrentFrame->mvpMapPoints[i]=static_cast<MapPointPtr >(NULL);
                 }
 
-#ifdef DEBUG
-                if(mState == FULL) {
-                    const vector<MapPointPtr > vpMapPointsKF = mpCurrentFrame->mvpMapPoints;
-                    unordered_map<int, int> CamMPs;
-                    int totalMP = 0;
-                    for(size_t i = 0; i < vpMapPointsKF.size(); i++){
-                        auto pMP = vpMapPointsKF[i];
-                        if(!pMP || pMP->isBad()) continue;
-                        int camid = mpCurrentFrame->keypointToCam[i];
-                        CamMPs[camid]++;
-                        totalMP++;
-                    }
-                    cout << S::green << "## Aft Track Local Map and Opt" << mpCurrentFrame->mnId << " has " << totalMP << " MPs " << endl;
-                    for(auto cam : CamMPs) cout << "\t Fcam " << cam.first << " has " << cam.second << " MPs ";
-                    cout << S::endc << endl;
-                    // mpCurrentFrame->SaveImageWithMatches("AftTrackFin_");
-                }
-#endif
-
-
                 // Check if we need to insert a new keyframe
                 if(NeedNewKeyFrame())
                     CreateNewKeyFrame();
@@ -425,11 +410,6 @@ void Tracking::Track()
         {
             // 取得3帧之间的scale平均值
             double avg = 0;
-            //sort(mvRelocSoldierScale.begin(), mvRelocSoldierScale.end());
-            //auto itfirst = mvRelocSoldierScale.begin() + 1;
-            //auto itend = mvRelocSoldierScale.end() - 1;
-            //vector<double> insideThree(itfirst, itend);
-
             for(int i = 0; i < (int)mvRelocSoldierScale.size(); i++) {
                 //cout << insideThree[i] << " ";cout.flush();
                 avg+=mvRelocSoldierScale[i];
@@ -505,23 +485,10 @@ void Tracking::AdjustSecondMapMultical(const int& camS, double& scale)
         auto pMP =  mpCurrentFrame->mvpMapPoints[i];
         if( !pMP ) continue;
         if(pMP->isBad()) continue;
-        int camid = mpCurrentFrame->keypointToCam[i];
-        if(camid != 0) cout<<"*";cout.flush();
         pMP->AddObservation(pKF, i);
         pMP->ComputeDistinctiveDescriptors();
         pMP->UpdateNormalAndDepth();
     }
-
-    /*
-    ORBmatcher matcher;
-    auto allMapPoints = mpMap->GetAllMapPoints();
-    set<MapPointPtr> spAlreadyFoundMPs = pKF->GetMapPoints();
-    int matches = matcher.SearchByProjection(pKF,
-                                             allMapPoints,
-                                             spAlreadyFoundMPs,
-                                             3, 64);
-    cout << "additional match in new scale: "<<  matches << endl;
-    */
 
     pKF->UpdateConnections();
     pKF->mbConnectedToSecondMap = true;
@@ -623,8 +590,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
     mvpLocalMapPoints.clear();
     // #######################################
 
-    int  nCrossCamMP = 0;
-
     cout << "Current Frame id: " << mpCurrentFrame->mnId << endl;
     int nFrames = mvpFrameForSecondMap.size();
     for(int i = 0; i < nFrames; i++) {
@@ -636,8 +601,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
             auto pMP =  pF->mvpMapPoints[i];
             if( !pMP ) continue;
             if(pMP->isBad()) continue;
-            int camid = pF->keypointToCam[i];
-            if(camid != 0) cout<<"*";cout.flush();
             pMP->AddObservation(pKF, i);
             pMP->ComputeDistinctiveDescriptors();
             pMP->UpdateNormalAndDepth();
@@ -2054,7 +2017,7 @@ void Tracking::Reset()
 
     if(mpInitializer)
     {
-        //        delete mpInitializer;
+        // delete mpInitializer;
         mpInitializer = static_cast<InitializerPtr >(NULL);
     }
 

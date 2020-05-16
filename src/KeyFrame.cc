@@ -46,9 +46,13 @@ namespace ORB_SLAM2
 
 long unsigned int KeyFrame::nNextId=0;
 
-KeyFrame::KeyFrame(FramePtr pF,
-                   MapPtr pMap,
-                   KeyFrameDatabasePtr pKFDB):
+KeyFrame::KeyFrame(
+    FramePtr pF,
+    MapPtr pMap,
+    KeyFrameDatabasePtr pKFDB
+):
+    mpFrame(pF),
+    mbMapScaled(pF->mbMapScaled),
     mnFrameId(pF->mnId),
     mTimeStamp(pF->mTimeStamp),
     mnGridCols(FRAME_GRID_COLS),
@@ -62,36 +66,25 @@ KeyFrame::KeyFrame(FramePtr pF,
     mnRelocQuery(0),
     mnRelocWords(0),
     mnBAGlobalForKF(0),
-
-    mvImages(pF->mvImages),
-    totalN(pF->totalN),
-    mvN(pF->mvN),
-
-    mvfGridElementWidthInv(pF->mvfGridElementWidthInv),
-    mvfGridElementHeightInv(pF->mvfGridElementHeightInv),
+    
     mpCameras(pF->mpCameras),
     mvK(pF->mvK),
     mvDistCoef(pF->mvDistCoef),
     mvExtrinsics(pF->mvExtrinsics),
     mvExtAdj(pF->mvExtAdj),
-    mvfx(pF->mvfx),
-    mvfy(pF->mvfy),
-    mvcx(pF->mvcx),
-    mvcy(pF->mvcy),
-    mvinvfx(pF->mvinvfx),
-    mvinvfy(pF->mvinvfy),
 
+    totalN(pF->totalN),
+    mvN(pF->mvN),
 
     mvTotalKeys(pF->mvTotalKeys),
     mvTotalKeysUn(pF->mvTotalKeysUn),
-    mvvkeysTemp(pF->mvvkeysTemp),
-    mvvkeysUnTemp(pF->mvvkeysUnTemp),
     keypointToCam(pF->keypointToCam),
     keypointToCamLocal(pF->keypointToCamLocal),
-
+    mvvkeysTemp(pF->mvvkeysTemp),
+    mvvkeysUnTemp(pF->mvvkeysUnTemp),
     mvDescriptors(pF->mvDescriptors),
-//    mvBowVec(pF->mvBowVec),
-//    mvFeatVec(pF->mvFeatVec),
+
+    mvImages(pF->mvImages),
 
     mnScaleLevels(pF->mnScaleLevels),
     mfScaleFactor(pF->mfScaleFactor),
@@ -100,22 +93,32 @@ KeyFrame::KeyFrame(FramePtr pF,
     mvInvScaleFactors(pF->mvInvScaleFactors),
     mvLevelSigma2(pF->mvLevelSigma2),
     mvInvLevelSigma2(pF->mvInvLevelSigma2),
+
+    mvfGridElementWidthInv(pF->mvfGridElementWidthInv),
+    mvfGridElementHeightInv(pF->mvfGridElementHeightInv),
+
     mvMinX(pF->mvMinX),
+     mvMaxX(pF->mvMaxX),
     mvMinY(pF->mvMinY),
-    mvMaxX(pF->mvMaxX),
     mvMaxY(pF->mvMaxY),
+    
+    mvfx(pF->mvfx),
+    mvfy(pF->mvfy),
+    mvcx(pF->mvcx),
+    mvcy(pF->mvcy),
+    mvinvfx(pF->mvinvfx),
+    mvinvfy(pF->mvinvfy),
 
     mvpMapPoints(pF->mvpMapPoints),
     mpKeyFrameDB(pKFDB),
     mpORBvocabulary(pF->mpORBvocabulary),
     mbFirstConnection(true),
     mpParent(NULL),
-    mbNotErase(false),
     mbToBeErased(false),
     mbBad(false),
-    mbMapScaled(pF->mbMapScaled),
-    mpMap(pMap),
-    mpFrame(pF)
+    
+    mpMap(pMap)
+
 {
     mnId=nNextId++;
     mnCams = mpCameras->getNCameras();
@@ -786,7 +789,7 @@ float KeyFrame::ComputeSceneMedianDepth(const int q)
     cv::Mat Rcw2 = Tcw_.row(2).colRange(0,3);
     Rcw2 = Rcw2.t();
     float zcw = Tcw_.at<float>(2,3);
-    for(int i=0; i< mvpMapPoints.size(); i++)
+    for(unsigned i=0; i< mvpMapPoints.size(); i++)
     {
         if(mvpMapPoints[i])
         {

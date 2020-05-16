@@ -133,7 +133,6 @@ void MapPoint::EraseObservation(KeyFramePtr  pKF)
         if(! pKF) return;
         if(mObservations.count(pKF))
         {
-            int idx = mObservations[pKF];
             nObs--;
 
             mObservations.erase(pKF);

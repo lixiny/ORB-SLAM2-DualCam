@@ -199,8 +199,6 @@ public:
 
     std::unordered_map<size_t, int> keypointToCam;
     std::unordered_map<size_t, size_t> keypointToCamLocal;
-
-
     std::vector<std::vector<cv::KeyPoint>> mvvkeysTemp;
     std::vector<std::vector<cv::KeyPoint>> mvvkeysUnTemp;
     const vector<cv::Mat> mvDescriptors;
@@ -254,8 +252,6 @@ protected:
     // BoW
     KeyFrameDatabasePtr mpKeyFrameDB;
     ORBVocabularyPtr mpORBvocabulary;
-
-
 
     std::map<KeyFramePtr,int> mConnectedKeyFrameWeights;
     std::vector<KeyFramePtr> mvpOrderedConnectedKeyFrames;

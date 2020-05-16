@@ -34,9 +34,8 @@ using namespace cv;
 using namespace ORB_SLAM2;
 using namespace std::chrono;
 
-#define KEYCODE_ESC         0x1B
+#define KEYCODE_ESC 0x1B
 
-static void sleep_ms(unsigned int secs);
 string getTimeStampInString();
 int kbhit(void);
 
@@ -61,14 +60,13 @@ int main(int argc, char** argv)
 
     int width = cap.get(cv::CAP_PROP_FRAME_WIDTH);
     int height = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-    cv::Size S = cv::Size(width,  height);
     cout << "Image Size: width " << width << " height: " << height << endl;
 
     shared_ptr<ORB_SLAM2::System> pSLAM = make_shared<ORB_SLAM2::System>(pathToVoc,pathToSetting,ORB_SLAM2::System::DUAL,true);
     pSLAM->init();
 
-    Rect rectLeft(0,0,640,480);
-    Rect rectRight(640,0,640,480);
+    Rect rectLeft(0,0,int(width/2),height);
+    Rect rectRight(int(width/2),0,int(width/2),height);
     cv::Mat frame;
     vector<cv::Mat> imgs;
     imgs.resize(2);
@@ -76,7 +74,7 @@ int main(int argc, char** argv)
     double timestamp = 0.0;
 
     while (true) {
-        cap >> frame;
+        if(! cap.read(frame)) continue;
         if (frame.empty()) continue;
         if(skip-->0) continue;
         Mat rgbLeft = frame(rectLeft);
@@ -133,17 +131,4 @@ string getTimeStampInString()
     return ss.str();
 }
 
-static void sleep_ms(unsigned int secs)
-
-{
-
-    struct timeval tval;
-
-    tval.tv_sec=secs/1000;
-
-    tval.tv_usec=(secs*1000)%1000000;
-
-    select(0,NULL,NULL,NULL,&tval);
-
-}
 

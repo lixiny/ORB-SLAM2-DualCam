@@ -83,9 +83,22 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-PnPsolver::PnPsolver(const Frame &F, const vector<MapPointPtr > &vpMapPointMatches, const int& c):
-    pws(0), us(0), alphas(0), pcs(0), maximum_number_of_correspondences(0), number_of_correspondences(0), mnInliersi(0),
-    mnIterations(0), mnBestInliers(0), N(0), forCam(c)
+PnPsolver::PnPsolver(
+    const Frame &F, 
+    const vector<MapPointPtr > &vpMapPointMatches, 
+    const int& c
+):
+    forCam(c),
+    pws(0), 
+    us(0), 
+    alphas(0), 
+    pcs(0), 
+    maximum_number_of_correspondences(0), 
+    number_of_correspondences(0), 
+    mnInliersi(0),
+    mnIterations(0), 
+    mnBestInliers(0), 
+    N(0)
 {
     // cout << S::purple << __FUNCTION__ << S::endc << endl;
     mvpMapPointMatches = vpMapPointMatches;
