@@ -34,3 +34,4 @@ test
 build_tools
 *.mp4
 *.bin
+.vscode/

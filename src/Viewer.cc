@@ -159,6 +159,8 @@ void Viewer::Run()
 
         if (mpTracker->mState == 0) continue;
         cv::Mat im = mpFrameDrawer->DrawFrame();
+        if (im.empty()) continue;
+
         int width = im.cols / 1.5f;
         int height = im.rows / 1.5f;
         cv::Size S = cv::Size(width, height);

@@ -794,8 +794,6 @@ int ORBmatcher::SearchByProjection(KeyFramePtr pKF,
 
         }
     }
-
-    cout << "new added: " << newAdd << " new replaced: " << replaced << endl;
     return nmatches;
 
 }

@@ -742,7 +742,6 @@ void LocalMapping::SearchCrossCameras()
                     }
                 }
                 if(nGood>=70){
-                    cout << endl << S::purple << __FUNCTION__ <<  " nGood :" << nGood << S::endc;
                     bMatch = true;
                     pKFsuccess = vpRemainKFs[i];
                     break;
@@ -773,7 +772,7 @@ void LocalMapping::SearchCrossCameras()
 
     }
 
-    cout << " Success replaced: " << replaced << " newAdded: " << newadded << endl;
+    cout << "LocalMapping SearchCrossCameras replaced: " << replaced << " added: " << newadded << endl;
     // Update KeyFrame
     mpCurrentKeyFrame->UpdateConnections();
 

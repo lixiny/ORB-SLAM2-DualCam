@@ -264,7 +264,6 @@ cv::Mat Tracking::GrabImageDual(vector<cv::Mat>& ims, const double &timestamp)
         mpCurrentFrame = make_shared<Frame>(mpSystem, mvImGrays,timestamp, mpCameras, mvpStandardORBextractor,mpORBVocabulary, mbIsMapScaled);
 
 
-    // cout << "frameId: " << mpCurrentFrame->mnId << endl;
     Track();
     return mpCurrentFrame->mTcw.clone();
 }
@@ -414,7 +413,6 @@ void Tracking::Track()
                 //cout << insideThree[i] << " ";cout.flush();
                 avg+=mvRelocSoldierScale[i];
             }
-            cout << endl;
             avg /= mvRelocSoldierScale.size();
             mReloccScale = avg;
 
@@ -477,6 +475,7 @@ bool Tracking::FindPartialRelocalCandidate()
 
 void Tracking::AdjustSecondMapMultical(const int& camS, double& scale)
 {
+    cout << S::yellow << __FUNCTION__ << S::endc << endl;
     unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
     KeyFramePtr pKF = make_shared<KeyFrame>(mpCurrentFrame, mpMap, mpKeyFrameDB);
@@ -508,64 +507,6 @@ void Tracking::AdjustSecondMapMultical(const int& camS, double& scale)
     mnSecondMap++;
     return;
 
-    /*
-    auto allKeyFrames = mpMap->GetAllKeyFrames();
-    auto allMapPoints = mpMap->GetAllMapPoints();
-
-    int ndiscardKF = 0;
-    int ndiscardMP = 0;
-
-    // scale 所有[地图Map]中关键帧, 并且 SetBadFlag 那些不在局部地图中的关键帧
-    for(auto itKF = allKeyFrames.begin(); itKF != allKeyFrames.end(); itKF++) {
-        KeyFramePtr pKF = *itKF;
-        if(!pKF || pKF->isBad()) continue;
-        if(pKF->mbScaled) continue;
-        pKF->SetScale(scale);
-        pKF->mbScaled = true;
-        pKF->mbConnectedToSecondMap = true;
-    }
-
-    // cale 所有地图中的3D点， 并且 SetBadFlag 那些不在局部地图中的地图点
-    for(auto itMP = allMapPoints.begin(); itMP != allMapPoints.end(); itMP++) {
-        MapPointPtr pMP = *itMP;
-        if(!pMP || pMP->isBad()) continue;
-        if(pMP->mbScaled) continue;
-        pMP->SetScale(scale);
-        pMP->mbScaled = true;
-        pMP->UpdateNormalAndDepth();
-    }
-
-    ORBmatcher matcher;
-    set<MapPointPtr> spAlreadyFoundMPs = pKF->GetMapPoints();
-    int matches = matcher.SearchByProjection(pKF,
-                                             allMapPoints,
-                                             spAlreadyFoundMPs,
-                                             3, 64);
-    cout << "additional match in new scale: "<<  matches << endl;
-
-    mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
-    mpMap->SetReferenceKeyFrames(mvpLocalKeyFrames);
-    mpCurrentFrame->SetPose(pKF->GetPose());
-    mpMapDrawer->SetCurrentCameraPose(mpCurrentFrame->mTcw);
-    // mpMapDrawer->SetScale(scale);
-
-    mpFrameDrawer->Update(shared_from_this());
-    mVelocity = cv::Mat();
-
-    mnLastKeyFrameId = pKF->mnId;
-    mpLastKeyFrame = pKF;
-    mpReferenceKF = pKF;
-    mpCurrentFrame->mpReferenceKF = pKF;
-    mpLastFrame = mpCurrentFrame;
-
-    mpLocalMapper->Release();
-    mpLocalMapper->SetScale(scale);
-    mpLocalMapper->InsertKeyFrame(pKF);
-    mnSecondMap++;
-
-    for(auto pKF : mpMap->GetAllKeyFrames()) pKF->mbScaled = false;
-    for(auto pMP : mpMap->GetAllMapPoints()) pMP->mbScaled = false;
-    */
 
 }
 void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
@@ -590,7 +531,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
     mvpLocalMapPoints.clear();
     // #######################################
 
-    cout << "Current Frame id: " << mpCurrentFrame->mnId << endl;
     int nFrames = mvpFrameForSecondMap.size();
     for(int i = 0; i < nFrames; i++) {
         auto pF = mvpFrameForSecondMap[i];
@@ -664,15 +604,14 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
             if(pKF->mnTrackSecondMapForFrame == mpCurrentFrame->mnId) continue;
             if(counter < 0.6 * max && !pKF->mbConnectedToSecondMap) continue;
 
-            // cout << "kfid: " << it->first->mnId << "   covis #" << it->second << " is added to the local map" << endl;
             mvpLocalKeyFrames.push_back(it->first);
             pKF->mnTrackSecondMapForFrame = mpCurrentFrame->mnId;
         }
 
-        cout << endl;
-        cout << "processing frame id: " << pF->mnId << endl;
-        cout << "relocing KF id: " << pKF->mnId << " ( constructed from processing frame) " << endl;
-        cout << "reloced KF id " << pF->mpRelocedKF->mnId << endl;
+        // cout << endl;
+        // cout << "processing frame id: " << pF->mnId << endl;
+        // cout << "relocing KF id: " << pKF->mnId << " ( constructed from processing frame) " << endl;
+        // cout << "reloced KF id " << pF->mpRelocedKF->mnId << endl;
 
         map<KeyFramePtr ,int> keyframeCounter2;
         auto vpMapPoints = pF->mpRelocedKF->GetMapPointMatches();
@@ -715,7 +654,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
             if(pKF->mnTrackSecondMapForFrame == mpCurrentFrame->mnId) continue;
             if(counter < 0.6 * max && !pKF->mbConnectedToSecondMap)  continue;
 
-            // cout << "kfid: " << it->first->mnId << "   covis #" << it->second << " is added to the local map" << endl;
             mvpLocalKeyFrames.push_back(it->first);
             pKF->mnTrackSecondMapForFrame = mpCurrentFrame->mnId;
         }
@@ -751,7 +689,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
         KeyFramePtr pKF = *itKF;
         if(!pKF || pKF->isBad()) continue;
         if(pKF->mnTrackSecondMapForFrame != mpCurrentFrame->mnId) {
-            cout << "-";cout.flush();
             pKF->SetBadFlag();
             ndiscardKF++;
             continue;
@@ -777,9 +714,6 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
         pMP->UpdateNormalAndDepth();
     }
 
-    cout << S::blue << "Scaling map finished! " << S::endc << endl;
-    cout << S::blue << "discard " << ndiscardKF << " KFs " << ndiscardMP << " MPs" << S::endc << endl;
-    // cout << "current KFt after scale " << pKFrelocC->GetCameraCenter() << "\n\n";cout.flush();
 
     //################################################################
     // 10. 在新的Scale下做一次Search
@@ -790,11 +724,10 @@ void Tracking::CreateSecondMapMultical(const int& camS, double& scale)
     for(auto itKF = mvpKeyFrameForSecondMap.begin(); itKF != mvpKeyFrameForSecondMap.end(); itKF++) {
         auto pKF = *itKF;
         set<MapPointPtr> spAlreadyFoundMPs = pKF->GetMapPoints();
-        int matches = matcher.SearchByProjection(pKF,
-                                                 mvpLocalMapPoints,
-                                                 spAlreadyFoundMPs,
-                                                 3, 64);
-        cout << "additional match in new scale: "<<  matches << endl;
+        matcher.SearchByProjection(pKF,
+                                    mvpLocalMapPoints,
+                                    spAlreadyFoundMPs,
+                                    3, 64);
     }
 
     Optimizer::GlobalBundleAdjustemnt(mpMap, 10, pKFLastInSecondMap->mnId);
@@ -894,7 +827,6 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
             }
             else
             {
-                // cout << S::lblue << " enough matches: " << nmatches << " ";
                 PnPsolverPtr  pSolver = make_shared<PnPsolver>(*mpCurrentFrame,vvpMapPointMatches[i], camS);
                 pSolver->SetRansacParameters(0.99,10,300,4,0.5,5.991);
                 vpPnPsolvers[i] = pSolver;
@@ -987,8 +919,6 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
 
                 int nGood = Optimizer::PoseOptimization(pinF);
 
-                // cout << S::lblue << __FUNCTION__ <<  " nGoods: " << nGood <<" ";cout.flush();
-
                 if(nGood<10)
                     continue;
 
@@ -1031,53 +961,10 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
                     }
                 }
 
-                // cout << S::endc << " ";
                 // If the pose is supported by enough inliers stop ransacs and continue
                 if(nGood>=70)
                 {
-                    /**
-                    int nm = vvpMapPointMatches[i].size();
-                    vector<pair<cv::KeyPoint, cv::KeyPoint>> kpCorresp;
-                    int nFound = 0;
-                    for(int j = 0; j < nm; j++) {
-                        auto pMP = pinF->mvpMapPoints[j];
-                        if ( ! pMP) continue;
-                        nFound++;
-                        auto obsvs = pMP->GetObservations();
-                        for(auto it = obsvs.begin(); it!= obsvs.end(); it++) {
-                            auto pKFobs = it->first;
-                            if (pKFobs != vpCandidateKFs[i]) continue;
-                            if (pKFobs == vpCandidateKFs[i]) {
-                                int index = it->second;
-                                cv::KeyPoint kpKF = pKFobs->mvTotalKeysUn[index];
-                                int indexFatC = j;
-                                cv::KeyPoint kpFatC = mpCurrentFrame->mvvkeysUnTemp[c][indexFatC];
-                                kpCorresp.push_back(make_pair(kpFatC, kpKF));
-                                break;
-                            }
-                        }
-                    }
-                    vector<cv::Mat> imgs;
-                    imgs.push_back(mpCurrentFrame->mvImages[c]);
-                    imgs.push_back(vpCandidateKFs[i]->mvImages[0]);
-                    auto imsMerge = Converter::jointImage(imgs);
-                    cv::cvtColor(imsMerge, imsMerge, CV_GRAY2RGB);
-                    cv::RNG rng(time(0));
-                    for(auto it = kpCorresp.begin(); it != kpCorresp.end(); it++) {
-                        cv::KeyPoint kpF = it->first;
-                        cv::Point Fp = cv::Point(kpF.pt.x, kpF.pt.y);
-                        cv::KeyPoint kpKF = it->second;
-                        cv::Point KFp = cv::Point(640 + kpKF.pt.x, kpKF.pt.y);
-                        auto color = cv::Scalar(rng.uniform(0,255),rng.uniform(0,255),rng.uniform(0,255));
-                        cv::circle(imsMerge, Fp, 3, color);
-                        cv::circle(imsMerge, KFp, 3, color);
-                        cv::line(imsMerge, Fp, KFp, color);
-                    }
-
-                    cv::imwrite("queryF" + to_string(mpCurrentFrame->mnId) + "_responseKF" + to_string(vpCandidateKFs[i]->mnId)+".jpg", imsMerge);
-                    */
-
-                    cout << S::purple << __FUNCTION__ <<  "middle nGood :" << nGood; cout.flush();
+                   
                     ORBmatcher matcher3(0.8,true);
                     auto vpNeighKF = vpCandidateKFs[i]->GetConnectedKeyFrames();
                     int nadditional2 = 0;
@@ -1091,7 +978,6 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
                     }
 
                     nGood = Optimizer::PoseOptimization(pinF);
-                    cout << S::red << " FINAL nGood" << nGood <<  S::endc;
                     bMatch = true;
                     mpCurrentFrame->mpRelocedKF = vpCandidateKFs[i];
                     break;
@@ -1107,7 +993,6 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
     }
     else
     {
-        cout << S::green <<  " Success ";
         int count = 0;
         for(int i = 0; i < pinF->totalN; i++) {
             if(pinF->mvbOutlier[i]) continue;
@@ -1121,7 +1006,7 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
             mpCurrentFrame->mvpMapPoints[globalKpIdx] = pinF->mvpMapPoints[i];
             count++;
         }
-        cout << count << " MapPoints reloced " << S::endc << endl;
+        cout << S::purple << "Cross camera " << count << " MapPoints reloced " << S::endc << endl;
 
         mpMapDrawer->SetCurrentCameraPose(mpCurrentFrame->mTcw);
         mpMapDrawer->SetRelocCameraPose(pinF->mTcw);
@@ -1131,17 +1016,17 @@ bool Tracking::RelocalizationPartialOnCam(const int& camS, double& scale)
         cv::Mat deltaCenter = centerS - centerC;
         Eigen::Vector3d egtsc_map(deltaCenter.at<float>(0,0), deltaCenter.at<float>(1,0), deltaCenter.at<float>(2,0));
 
-        //        auto egtsc_map = egtc_w - egts_w;
+
         double dotInMap = pow(egtsc_map.dot(egtsc_map), 0.5);
-        cout << S::purple << "Extrinsic length in map: " << dotInMap << S::endc << endl;
+        // cout << S::purple << "Extrinsic length in map: " << dotInMap << S::endc << endl;
         auto Tsc = mpCameras->getExtrinsici(camS);
         auto egTsc = Converter::toMatrix4d(Tsc);
         Eigen::Vector3d egtsc(egTsc(0,3), egTsc(1,3), egTsc(2,3));
         double dotInWorld = pow(egtsc.dot(egtsc), 0.5);
-        cout << S::purple << "Extrinsic in world" << egtsc.transpose() << S::endc << endl;
-        cout << S::purple << "Extrinsic length in world: " << dotInWorld << "m" <<  S::endc << endl;
+        // cout << S::purple << "Extrinsic in world" << egtsc.transpose() << S::endc << endl;
+        // cout << S::purple << "Extrinsic length in world: " << dotInWorld << "m" <<  S::endc << endl;
         scale = dotInWorld / dotInMap;
-        cout << S::purple << "scale" << scale << S::endc << endl;
+        // cout << S::purple << "scale" << scale << S::endc << endl;
         return true;
     }
 
@@ -1153,8 +1038,7 @@ bool Tracking::Relocalization()
 
     // Compute Bag of Words Vector
     mpCurrentFrame->ComputeBoW();
-    cout << S::red << __FUNCTION__ << " at Frame# " << mpCurrentFrame->mnId << S::endc << endl;
-
+    
     // Relocalization is performed when tracking is lost
     // Track Lost: Query KeyFrame Database for keyframe candidates for relocalisation
     vector<KeyFramePtr > vpCandidateKFs = mpKeyFrameDB->DetectRelocalizationCandidatesForCam(mpCurrentFrame, CAP, CAP);
@@ -1179,8 +1063,6 @@ bool Tracking::Relocalization()
 
     if (vpRemainCandidateKFs.empty()) return false;
     nKFs = vpRemainCandidateKFs.size();
-
-    cout << "\t Candidates: " << nKFs << endl;
 
     // We perform first an ORB matching with each candidate
     // If enough matches are found we setup a PnP solver
@@ -1297,8 +1179,6 @@ bool Tracking::Relocalization()
                     nAdditional += add;
                 }
 
-                cout << S::red << "\tfirst Search by Proj add: " << nAdditional << " MPs" << S::endc << endl;
-
 
                 if(nAdditional+nGood >= 60)
                 {
@@ -1326,8 +1206,6 @@ bool Tracking::Relocalization()
                                                                        64);
                             nAdditional += add;
                         }
-
-                        cout << S::red << "\tSecond Search by Proj add: " << nAdditional << " MPs" << S::endc << endl;
 
                         // Final optimization
                         if(nGood+nAdditional >= 70)
@@ -2175,7 +2053,7 @@ void Tracking::CreateInitialMapMonocular()
     pKFcur->UpdateConnections();
 
     // Bundle Adjustment
-    cout << S::green <<  "\n\t\t *** New Map created with " << mpMap->MapPointsInMap() << " points *** \n\n" << S::endc << endl;
+    cout << S::green <<  "New Map created with " << mpMap->MapPointsInMap() << " points" << S::endc << endl;
 
     Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
