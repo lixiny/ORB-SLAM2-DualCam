@@ -2,12 +2,11 @@
 
 
 **change log:**  
-* `2020.06.28` 硕士论文知网链接[这里](https://kns.cnki.net/KCMS/detail/detail.aspx?dbcode=CMFD&dbname=CMFDTEMP&filename=1020619752.nh&v=MTE0NzZQSVI4ZVgxTHV4WVM3RGgxVDNxVHJXTTFGckNVUjdxZlllUm5GaW5rV3IzSlZGMjVIclc1RjliSnJaRWI=)
 * `2020.05.17` Tested on Ubuntu 18.04 with OpenCV 3.4.0.  Fixed bugs mentiond in issue #2.  Resolved several warnings. 
 
 
 # 1. Introduction
-<font color=#FF7F50>Backup of my work & M.S dissertation at Shanghai Jiao Tong University. </font>  
+<font color=#FF7F50>Backup of my Master Dissertation([知网](https://kns.cnki.net/KCMS/detail/detail.aspx?dbcode=CMFD&dbname=CMFDTEMP&filename=1020619752.nh&v=MTE0NzZQSVI4ZVgxTHV4WVM3RGgxVDNxVHJXTTFGckNVUjdxZlllUm5GaW5rV3IzSlZGMjVIclc1RjliSnJaRWI=)) at Shanghai Jiao Tong University . </font>  
 
 **Demo on [[YouTube](https://www.youtube.com/watch?v=MhrrnwHUnL0)] and [[bilibili](https://www.bilibili.com/video/av69906130)].**
 
